@@ -7,6 +7,8 @@ GROUP BY npi
 ORDER BY stcc DESC
 limit 10;
 
+-- 1881634483	99707
+
 SELECT p.npi, SUM(total_claim_count) as stcc, nppes_provider_first_name as npf, nppes_provider_last_org_name as np, specialty_description as sd
 FROM prescription as p
 LEFT JOIN prescriber as pr
@@ -14,6 +16,8 @@ ON p.npi = pr.npi
 GROUP BY p.npi, npf, np, sd
 ORDER BY stcc DESC
 LIMIT 1;
+
+-- 1881634483	99707	"BRUCE"	"PENDLEY"	"Family Practice"
 
 -- 2. a. Which specialty had the most total number of claims (totaled over all drugs)?
 
@@ -25,22 +29,24 @@ GROUP BY sd
 ORDER BY tcc DESC
 LIMIT 1;
 
---     b. Which specialty had the most total number of claims for opioids?
+-- "Family Practice"	9752347
 
-SELECT p1.specialty_description as sd, d1.opioid_drug_flag as tcc, d1.long_acting_opioid_drug_flag as ltcc
+--  b. Which specialty had the most total number of claims for opioids?
+
+SELECT p1.specialty_description as sd, (COUNT(d1.opioid_drug_flag) + COUNT(d1.long_acting_opioid_drug_flag)) as tcc
 FROM prescriber as p1
 INNER JOIN prescription as p2
 ON p1.npi = p2.npi
 INNER JOIN drug as d1
 ON p2.drug_name = d1.drug_name
-WHERE d1.opioid_drug_flag = 'Y' AND d1.long_acting_opioid_drug_flag = 'Y'
-GROUP BY 1, 2, 3
-ORDER BY 1 DESC;
+GROUP BY 1
+ORDER BY 2 DESC;
 
-
-
+-- "Nurse Practitioner"	351468
 
 --     c. **Challenge Question:** Are there any specialties that appear in the prescriber table that have no associated prescriptions in the prescription table?
+
+
 
 --     d. **Difficult Bonus:** *Do not attempt until you have solved all other problems!* For each specialty, report the percentage of total claims by that specialty which are for opioids. Which specialties have a high percentage of opioids?
 
