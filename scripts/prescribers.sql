@@ -1,29 +1,44 @@
 -- 1. a. Which prescriber had the highest total number of claims (totaled over all drugs)? Report the npi and the total number of claims.
 --    b. Repeat the above, but this time report the nppes_provider_first_name, nppes_provider_last_org_name,  specialty_description, and the total number of claims.
 
-SELECT p.npi, total_claim_count as tcc
+SELECT npi, SUM(total_claim_count) as stcc
+FROM prescription as p
+GROUP BY npi
+ORDER BY stcc DESC
+limit 10;
+
+SELECT p.npi, SUM(total_claim_count) as stcc, nppes_provider_first_name as npf, nppes_provider_last_org_name as np, specialty_description as sd
 FROM prescription as p
 LEFT JOIN prescriber as pr
 ON p.npi = pr.npi
-GROUP BY p.npi, tcc
-ORDER BY p.npi DESC
-LIMIT 10;
-
-SELECT total_claim_count as tcc
-FROM prescription as p
-ORDER BY tcc DESC
-LIMIT 10;
-
-SELECT p.npi, total_claim_count as tcc, nppes_provider_first_name as npf, nppes_provider_last_org_name as np, specialty_description as sd
-FROM prescription as p
-LEFT JOIN prescriber as pr
-ON p.npi = pr.npi
-ORDER BY tcc DESC
-LIMIT 10;
+GROUP BY p.npi, npf, np, sd
+ORDER BY stcc DESC
+LIMIT 1;
 
 -- 2. a. Which specialty had the most total number of claims (totaled over all drugs)?
 
+SELECT p1.specialty_description as sd, SUM(p2.total_claim_count) as tcc
+FROM prescriber as p1
+INNER JOIN prescription as p2
+ON p1.npi = p2.npi
+GROUP BY sd
+ORDER BY tcc DESC
+LIMIT 1;
+
 --     b. Which specialty had the most total number of claims for opioids?
+
+SELECT p1.specialty_description as sd, d1.opioid_drug_flag as tcc, d1.long_acting_opioid_drug_flag as ltcc
+FROM prescriber as p1
+INNER JOIN prescription as p2
+ON p1.npi = p2.npi
+INNER JOIN drug as d1
+ON p2.drug_name = d1.drug_name
+WHERE d1.opioid_drug_flag = 'Y' AND d1.long_acting_opioid_drug_flag = 'Y'
+GROUP BY 1, 2, 3
+ORDER BY 1 DESC;
+
+
+
 
 --     c. **Challenge Question:** Are there any specialties that appear in the prescriber table that have no associated prescriptions in the prescription table?
 
