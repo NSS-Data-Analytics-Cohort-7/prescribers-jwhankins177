@@ -7,7 +7,7 @@ GROUP BY npi
 ORDER BY stcc DESC
 limit 10;
 
--- 1881634483	99707
+-- ANSWER - 1881634483	99707
 
 SELECT p.npi, SUM(total_claim_count) as stcc, nppes_provider_first_name as npf, nppes_provider_last_org_name as np, specialty_description as sd
 FROM prescription as p
@@ -15,9 +15,9 @@ LEFT JOIN prescriber as pr
 ON p.npi = pr.npi
 GROUP BY p.npi, npf, np, sd
 ORDER BY stcc DESC
-LIMIT 1;
+LIMIT 5;
 
--- 1881634483	99707	"BRUCE"	"PENDLEY"	"Family Practice"
+-- ANSWER - 1881634483	99707	"BRUCE"	"PENDLEY"	"Family Practice"
 
 -- 2. a. Which specialty had the most total number of claims (totaled over all drugs)?
 
@@ -29,7 +29,7 @@ GROUP BY sd
 ORDER BY tcc DESC
 LIMIT 1;
 
--- "Family Practice"	9752347
+-- ANSWER - "Family Practice"	9752347
 
 --  b. Which specialty had the most total number of claims for opioids?
 
@@ -42,17 +42,41 @@ ON p2.drug_name = d1.drug_name
 GROUP BY 1
 ORDER BY 2 DESC;
 
--- "Nurse Practitioner"	351468
+-- ANSWER - "Nurse Practitioner"	351468
 
 --     c. **Challenge Question:** Are there any specialties that appear in the prescriber table that have no associated prescriptions in the prescription table?
-
-
 
 --     d. **Difficult Bonus:** *Do not attempt until you have solved all other problems!* For each specialty, report the percentage of total claims by that specialty which are for opioids. Which specialties have a high percentage of opioids?
 
 -- 3. a. Which drug (generic_name) had the highest total drug cost?
+-- ANSWER CHECK
+SELECT total_drug_cost, drug_name
+FROM prescription
+GROUP BY total_drug_cost, drug_name
+ORDER BY total_drug_cost DESC
+limit 10;
 
---     b. Which drug (generic_name) has the hightest total cost per day? **Bonus: Round your cost per day column to 2 decimal places. Google ROUND to see how this works.
+-- 2829174.3	"ESBRIET"
+
+SELECT total_drug_cost as tdc, generic_name as gn
+FROM prescription as p
+INNER JOIN drug as d
+ON p.drug_name = d.drug_name
+GROUP BY 1, 2
+ORDER BY 1 DESC
+limit 10;
+
+-- ANSWER - 2829174.3 "PIRFENIDONE"
+
+--    b. Which drug (generic_name) has the hightest total cost per day? **Bonus: Round your cost per day column to 2 decimal places. Google ROUND to see how this works.
+
+SELECT total_drug_cost AS tdcost, total_day_supply AS tdsupply, generic_name AS gn, ROUND((total_drug_cost / total_day_supply), 2) AS Cost_per_day
+FROM prescription as p
+INNER JOIN drug as d
+ON p.drug_name = d.drug_name
+GROUP BY 1, 2, 3
+ORDER BY 2 DESC
+limit 10;
 
 -- 4. a. For each drug in the drug table, return the drug name and then a column named 'drug_type' which says 'opioid' for drugs which have opioid_drug_flag = 'Y', says 'antibiotic' for those drugs which have antibiotic_drug_flag = 'Y', and says 'neither' for all other drugs.
 
