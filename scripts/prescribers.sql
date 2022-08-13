@@ -12,7 +12,7 @@ limit 10;
 SELECT p.npi, SUM(total_claim_count) as stcc, nppes_provider_first_name as npf, nppes_provider_last_org_name as np, specialty_description as sd
 FROM prescription as p
 LEFT JOIN prescriber as pr
-ON p.npi = pr.npi
+    ON p.npi = pr.npi
 GROUP BY p.npi, npf, np, sd
 ORDER BY stcc DESC
 LIMIT 5;
@@ -24,7 +24,7 @@ LIMIT 5;
 SELECT p1.specialty_description as sd, SUM(p2.total_claim_count) as tcc
 FROM prescriber as p1
 INNER JOIN prescription as p2
-ON p1.npi = p2.npi
+    ON p1.npi = p2.npi
 GROUP BY sd
 ORDER BY tcc DESC
 LIMIT 1;
@@ -33,12 +33,21 @@ LIMIT 1;
 
 --  b. Which specialty had the most total number of claims for opioids?
 
-SELECT p1.specialty_description as sd, (COUNT(d1.opioid_drug_flag) + COUNT(d1.long_acting_opioid_drug_flag)) as tcc
+SELECT p1.specialty_description as sd, SUM((d1.opioid_drug_flag) + COUNT(d1.long_acting_opioid_drug_flag)) as tcc
 FROM prescriber as p1
 INNER JOIN prescription as p2
-ON p1.npi = p2.npi
+    ON p1.npi = p2.npi
 INNER JOIN drug as d1
-ON p2.drug_name = d1.drug_name
+    ON p2.drug_name = d1.drug_name
+GROUP BY 1
+ORDER BY 2 DESC;
+
+SELECT p1.specialty_description as sd, (COUNT(d1.opioid_drug_flag) + COUNT(d1.long_acting_opioid_drug_flag)) as tcc
+FROM prescriber as p1
+    INNER JOIN prescription as p2
+        ON p1.npi = p2.npi
+    INNER JOIN drug as d1
+        ON p2.drug_name = d1.drug_name
 GROUP BY 1
 ORDER BY 2 DESC;
 
@@ -49,11 +58,11 @@ ORDER BY 2 DESC;
 --     d. **Difficult Bonus:** *Do not attempt until you have solved all other problems!* For each specialty, report the percentage of total claims by that specialty which are for opioids. Which specialties have a high percentage of opioids?
 
 -- 3. a. Which drug (generic_name) had the highest total drug cost?
--- ANSWER CHECK
+
 SELECT SUM(total_drug_cost) as tdc, generic_name as gn
 FROM prescription as p
-INNER JOIN drug as d
-ON p.drug_name = d.drug_name
+    INNER JOIN drug as d
+    ON p.drug_name = d.drug_name
 GROUP BY 2
 ORDER BY 1 DESC
 limit 10;
@@ -62,38 +71,39 @@ limit 10;
 
 --    b. Which drug (generic_name) has the hightest total cost per day? **Bonus: Round your cost per day column to 2 decimal places. Google ROUND to see how this works.
 
-SELECT generic_name AS gn, SUM(ROUND((total_drug_cost / total_day_supply), 2)) AS Cost_per_day
+SELECT generic_name AS gn, ROUND(SUM(total_drug_cost) / SUM(total_day_supply), 2) AS cost_per_day
 FROM prescription as p
 INNER JOIN drug as d
-ON p.drug_name = d.drug_name
+    ON p.drug_name = d.drug_name
 GROUP BY 1
 ORDER BY 2 DESC
 limit 10;
 
-
--- ANSWER - "LEDIPASVIR/SOFOSBUVIR"	88270.88
+-- ANSWER - "C1 ESTERASE INHIBITOR"	3495.22
 
 -- 4. a. For each drug in the drug table, return the drug name and then a column named 'drug_type' which says 'opioid' for drugs which have opioid_drug_flag = 'Y', says 'antibiotic' for those drugs which have antibiotic_drug_flag = 'Y', and says 'neither' for all other drugs.
 
 SELECT p1.drug_name as dn,
-(CASE WHEN d1.opioid_drug_flag = 'Y' THEN 'Opioid'
-WHEN d1.antibiotic_drug_flag = 'Y' THEN 'Antibiotics'
-WHEN d1.opioid_drug_flag = 'N' AND d1.antibiotic_drug_flag = 'N' THEN 'Neither' END) AS drug_type
+    (CASE WHEN d1.opioid_drug_flag = 'Y' THEN 'Opioid'
+    WHEN d1.antibiotic_drug_flag = 'Y' THEN 'Antibiotics'
+    ELSE 'Neither' END) AS drug_type
 FROM prescription as p1
-INNER JOIN drug as d1
-ON p1.drug_name = d1.drug_name
+    INNER JOIN drug as d1
+    ON p1.drug_name = d1.drug_name
 GROUP BY 1, 2
 ORDER BY 1;
 
 --     b. Building off of the query you wrote for part a, determine whether more was spent (total_drug_cost) on opioids or on antibiotics. Hint: Format the total costs as MONEY for easier comparision.
 
 SELECT CAST(SUM(total_drug_cost)AS money) AS money,
-(CASE WHEN d1.opioid_drug_flag = 'Y' THEN 'Opioid'
-WHEN d1.antibiotic_drug_flag = 'Y' THEN 'Antibiotics'
-WHEN d1.opioid_drug_flag = 'N' AND d1.antibiotic_drug_flag = 'N' THEN 'Neither' END) AS drug_type
+    (CASE WHEN d1.opioid_drug_flag = 'Y' THEN 'Opioid'
+          WHEN d1.antibiotic_drug_flag = 'Y' THEN 'Antibiotics'
+          WHEN d1.opioid_drug_flag = 'N' AND d1.antibiotic_drug_flag = 'N' THEN 'Neither' END) AS drug_type
+
 FROM prescription as p1
-INNER JOIN drug as d1
-ON p1.drug_name = d1.drug_name
+    INNER JOIN drug as d1
+    ON p1.drug_name = d1.drug_name
+
 GROUP BY 2
 ORDER BY 1 DESC;
 
@@ -101,19 +111,19 @@ ORDER BY 1 DESC;
 
 -- 5. a. How many CBSAs are in Tennessee? **Warning:** The cbsa table contains information for all states, not just Tennessee.
 
-SELECT COUNT(c.cbsa)
+SELECT COUNT(DISTINCT(c.cbsa))
 FROM CBSA as c
-INNER JOIN fips_county as f
-ON c.fipscounty = f.fipscounty
+LEFT JOIN fips_county as f
+    ON c.fipscounty = f.fipscounty
 WHERE UPPER(f.state) = 'TN';
 
--- ANSWER - 42
+-- ANSWER - 10
 
 --     b. Which cbsa has the largest combined population? Which has the smallest? Report the CBSA name and total population.
 SELECT c.cbsa, SUM(p.population)
 FROM cbsa as c
-INNER JOIN population as p
-ON c.fipscounty = p.fipscounty
+LEFT JOIN population as p
+    ON c.fipscounty = p.fipscounty
 GROUP BY 1
 ORDER BY 2 DESC
 limit 1;
@@ -123,7 +133,7 @@ limit 1;
 SELECT c.cbsa, SUM(p.population)
 FROM cbsa as c
 INNER JOIN population as p
-ON c.fipscounty = p.fipscounty
+    ON c.fipscounty = p.fipscounty
 GROUP BY 1
 ORDER BY 2
 LIMIT 1;
@@ -135,10 +145,11 @@ LIMIT 1;
 SELECT c.cbsa, p.fipscounty, p.population
 FROM population as p
 LEFT JOIN cbsa as c
-ON c.fipscounty = p.fipscounty
+    ON c.fipscounty = p.fipscounty
 WHERE c.fipscounty IS null
 GROUP BY 1, 2, 3
-ORDER BY 3 DESC;
+ORDER BY 3 DESC
+LIMIT 1;
 
 -- ANSWER - "47155"	95523
 
@@ -147,7 +158,8 @@ ORDER BY 3 DESC;
 
 SELECT drug_name, total_claim_count
 FROM prescription
-WHERE total_claim_count >= 3000;
+WHERE total_claim_count >= 3000
+ORDER BY total_claim_count DESC;
 
 --     b. For each instance that you found in part a, add a column that indicates whether the drug is an opioid.
 
