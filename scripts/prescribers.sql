@@ -87,41 +87,67 @@ ORDER BY 1;
 
 --     b. Building off of the query you wrote for part a, determine whether more was spent (total_drug_cost) on opioids or on antibiotics. Hint: Format the total costs as MONEY for easier comparision.
 
-SELECT p1.drug_name as dn,SUM(total_drug_cost),
+SELECT CAST(SUM(total_drug_cost)AS money) AS money,
 (CASE WHEN d1.opioid_drug_flag = 'Y' THEN 'Opioid'
 WHEN d1.antibiotic_drug_flag = 'Y' THEN 'Antibiotics'
 WHEN d1.opioid_drug_flag = 'N' AND d1.antibiotic_drug_flag = 'N' THEN 'Neither' END) AS drug_type
 FROM prescription as p1
 INNER JOIN drug as d1
 ON p1.drug_name = d1.drug_name
-GROUP BY 1,3
-ORDER BY 2 DESC;
+GROUP BY 2
+ORDER BY 1 DESC;
 
-SELECT p1.drug_name as dn,
-(CASE WHEN d1.opioid_drug_flag = 'Y' THEN 'Opioid'
-WHEN d1.antibiotic_drug_flag = 'Y' THEN 'Antibiotics'
-WHEN d1.opioid_drug_flag = 'N' AND d1.antibiotic_drug_flag = 'N' THEN 'Neither' END) AS drug_type
-WHERE drug_type = 'Opioid' (SELECT SUM(total_drug_cost,)
-                           FROM prescriptions
-                           AS omoney);
-FROM prescription as p1
-INNER JOIN drug as d1
-ON p1.drug_name = d1.drug_name
-GROUP BY 1, 2
-ORDER BY 1;
-
-
-
-
+-- ANSWER - "$105,080,626.37"	"Opioid"
 
 -- 5. a. How many CBSAs are in Tennessee? **Warning:** The cbsa table contains information for all states, not just Tennessee.
 
+SELECT COUNT(c.cbsa)
+FROM CBSA as c
+INNER JOIN fips_county as f
+ON c.fipscounty = f.fipscounty
+WHERE UPPER(f.state) = 'TN';
+
+-- ANSWER - 42
+
 --     b. Which cbsa has the largest combined population? Which has the smallest? Report the CBSA name and total population.
+SELECT c.cbsa, SUM(p.population)
+FROM cbsa as c
+INNER JOIN population as p
+ON c.fipscounty = p.fipscounty
+GROUP BY 1
+ORDER BY 2 DESC
+limit 1;
+
+-- ANSWER - "34980"	1830410
+
+SELECT c.cbsa, SUM(p.population)
+FROM cbsa as c
+INNER JOIN population as p
+ON c.fipscounty = p.fipscounty
+GROUP BY 1
+ORDER BY 2
+LIMIT 1;
+
+-- ANSWER - "34100"	116352
 
 --     c. What is the largest (in terms of population) county which is not included in a CBSA? Report the county name and population.
 
+SELECT c.cbsa, p.fipscounty, p.population
+FROM population as p
+LEFT JOIN cbsa as c
+ON c.fipscounty = p.fipscounty
+WHERE c.fipscounty IS null
+GROUP BY 1, 2, 3
+ORDER BY 3 DESC;
+
+-- ANSWER - "47155"	95523
+
 -- 6. 
 --     a. Find all rows in the prescription table where total_claims is at least 3000. Report the drug_name and the total_claim_count.
+
+SELECT drug_name, total_claim_count
+FROM prescription
+WHERE total_claim_count >= 3000;
 
 --     b. For each instance that you found in part a, add a column that indicates whether the drug is an opioid.
 
