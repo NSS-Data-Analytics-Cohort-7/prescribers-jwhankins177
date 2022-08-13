@@ -50,35 +50,38 @@ ORDER BY 2 DESC;
 
 -- 3. a. Which drug (generic_name) had the highest total drug cost?
 -- ANSWER CHECK
-SELECT total_drug_cost, drug_name
-FROM prescription
-GROUP BY total_drug_cost, drug_name
-ORDER BY total_drug_cost DESC
-limit 10;
-
--- 2829174.3	"ESBRIET"
-
-SELECT total_drug_cost as tdc, generic_name as gn
+SELECT SUM(total_drug_cost) as tdc, generic_name as gn
 FROM prescription as p
 INNER JOIN drug as d
 ON p.drug_name = d.drug_name
-GROUP BY 1, 2
+GROUP BY 2
 ORDER BY 1 DESC
 limit 10;
 
--- ANSWER - 2829174.3 "PIRFENIDONE"
+-- ANSWER - 104264066.3 "INSULIN GLARGINE,HUM.REC.ANLOG"
 
 --    b. Which drug (generic_name) has the hightest total cost per day? **Bonus: Round your cost per day column to 2 decimal places. Google ROUND to see how this works.
 
-SELECT total_drug_cost AS tdcost, total_day_supply AS tdsupply, generic_name AS gn, ROUND((total_drug_cost / total_day_supply), 2) AS Cost_per_day
+SELECT generic_name AS gn, SUM(ROUND((total_drug_cost / total_day_supply), 2)) AS Cost_per_day
 FROM prescription as p
 INNER JOIN drug as d
 ON p.drug_name = d.drug_name
-GROUP BY 1, 2, 3
+GROUP BY 1
 ORDER BY 2 DESC
 limit 10;
 
+
+-- ANSWER - "LEDIPASVIR/SOFOSBUVIR"	88270.88
+
 -- 4. a. For each drug in the drug table, return the drug name and then a column named 'drug_type' which says 'opioid' for drugs which have opioid_drug_flag = 'Y', says 'antibiotic' for those drugs which have antibiotic_drug_flag = 'Y', and says 'neither' for all other drugs.
+
+SELECT p1.drug_name as dn, d1.opioid_drug_flag as odf, d1.antibiotic_drug_flag as adf,
+CASE WHEN odf = 
+FROM prescription as p1
+INNER JOIN drug as d1
+ON p1.drug_name = d1.drug_name;
+
+
 
 --     b. Building off of the query you wrote for part a, determine whether more was spent (total_drug_cost) on opioids or on antibiotics. Hint: Format the total costs as MONEY for easier comparision.
 
