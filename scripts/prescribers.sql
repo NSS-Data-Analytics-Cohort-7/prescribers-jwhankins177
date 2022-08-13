@@ -75,15 +75,44 @@ limit 10;
 
 -- 4. a. For each drug in the drug table, return the drug name and then a column named 'drug_type' which says 'opioid' for drugs which have opioid_drug_flag = 'Y', says 'antibiotic' for those drugs which have antibiotic_drug_flag = 'Y', and says 'neither' for all other drugs.
 
-SELECT p1.drug_name as dn, d1.opioid_drug_flag as odf, d1.antibiotic_drug_flag as adf,
-CASE WHEN odf = 
+SELECT p1.drug_name as dn,
+(CASE WHEN d1.opioid_drug_flag = 'Y' THEN 'Opioid'
+WHEN d1.antibiotic_drug_flag = 'Y' THEN 'Antibiotics'
+WHEN d1.opioid_drug_flag = 'N' AND d1.antibiotic_drug_flag = 'N' THEN 'Neither' END) AS drug_type
 FROM prescription as p1
 INNER JOIN drug as d1
-ON p1.drug_name = d1.drug_name;
-
-
+ON p1.drug_name = d1.drug_name
+GROUP BY 1, 2
+ORDER BY 1;
 
 --     b. Building off of the query you wrote for part a, determine whether more was spent (total_drug_cost) on opioids or on antibiotics. Hint: Format the total costs as MONEY for easier comparision.
+
+SELECT p1.drug_name as dn,SUM(total_drug_cost),
+(CASE WHEN d1.opioid_drug_flag = 'Y' THEN 'Opioid'
+WHEN d1.antibiotic_drug_flag = 'Y' THEN 'Antibiotics'
+WHEN d1.opioid_drug_flag = 'N' AND d1.antibiotic_drug_flag = 'N' THEN 'Neither' END) AS drug_type
+FROM prescription as p1
+INNER JOIN drug as d1
+ON p1.drug_name = d1.drug_name
+GROUP BY 1,3
+ORDER BY 2 DESC;
+
+SELECT p1.drug_name as dn,
+(CASE WHEN d1.opioid_drug_flag = 'Y' THEN 'Opioid'
+WHEN d1.antibiotic_drug_flag = 'Y' THEN 'Antibiotics'
+WHEN d1.opioid_drug_flag = 'N' AND d1.antibiotic_drug_flag = 'N' THEN 'Neither' END) AS drug_type
+WHERE drug_type = 'Opioid' (SELECT SUM(total_drug_cost,)
+                           FROM prescriptions
+                           AS omoney);
+FROM prescription as p1
+INNER JOIN drug as d1
+ON p1.drug_name = d1.drug_name
+GROUP BY 1, 2
+ORDER BY 1;
+
+
+
+
 
 -- 5. a. How many CBSAs are in Tennessee? **Warning:** The cbsa table contains information for all states, not just Tennessee.
 
